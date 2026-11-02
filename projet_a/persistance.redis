@@ -1,0 +1,6 @@
+# Exécuter dans redis-cli sur le serveur du quiz, après les missions.
+CONFIG SET appendonly yes
+BGSAVE
+INFO persistence
+# Vérifier aof_enabled:1 et attendre rdb_bgsave_in_progress:0.
+# Puis redémarrer le service depuis le terminal, voir README.

@@ -1,0 +1,16 @@
+services:
+  mongo:
+    image: mongo:7.0
+    ports: ["127.0.0.1:27018:27017"]
+    volumes: ["mongo_data:/data/db"]
+  redis-cache:
+    image: redis:7.4
+    ports: ["127.0.0.1:6380:6379"]
+  redis-quiz:
+    image: redis:7.4
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec", "--maxmemory-policy", "noeviction"]
+    ports: ["127.0.0.1:6381:6379"]
+    volumes: ["quiz_data:/data"]
+volumes:
+  mongo_data:
+  quiz_data:

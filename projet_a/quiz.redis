@@ -1,0 +1,98 @@
+# Mission 2 : profils et index. Base Redis du quiz uniquement.
+DEL plateforme:quiz:joueurs ville:Rabat:joueurs ville:Casablanca:joueurs ville:Fes:joueurs ville:Tanger:joueurs ville:Marrakech:joueurs
+DEL file:duels:attente classement:general:points plateforme:quiz:parties badge:premiere-victoire:joueurs badge:rapide:joueurs badge:invaincu:joueurs
+DEL partie:1:fiche partie:2:fiche partie:3:fiche partie:4:fiche partie:5:fiche
+HSET joueur:j1:profil pseudo Nour ville Rabat niveau 3 parties 0
+SADD plateforme:quiz:joueurs j1
+SADD ville:Rabat:joueurs j1
+HSET joueur:j2:profil pseudo Ilyas ville Casablanca niveau 5 parties 0
+SADD plateforme:quiz:joueurs j2
+SADD ville:Casablanca:joueurs j2
+HSET joueur:j3:profil pseudo Sara ville Fes niveau 2 parties 0
+SADD plateforme:quiz:joueurs j3
+SADD ville:Fes:joueurs j3
+HSET joueur:j4:profil pseudo Adam ville Rabat niveau 4 parties 0
+SADD plateforme:quiz:joueurs j4
+SADD ville:Rabat:joueurs j4
+HSET joueur:j5:profil pseudo Lina ville Tanger niveau 1 parties 0
+SADD plateforme:quiz:joueurs j5
+SADD ville:Tanger:joueurs j5
+HSET joueur:j6:profil pseudo Yanis ville Marrakech niveau 3 parties 0
+SADD plateforme:quiz:joueurs j6
+SADD ville:Marrakech:joueurs j6
+HGETALL joueur:j3:profil
+SMEMBERS ville:Rabat:joueurs
+# Mission 3 : sessions de démonstration (pas une authentification réelle).
+SET session:j1:active 1 EX 1800
+SET session:j2:active 1 EX 1800
+SET session:j3:active 1 EX 1800
+SET session:j4:active 1 EX 1800
+SET session:j5:active 1 EX 1800
+SET session:j6:active 1 EX 1800
+EXPIRE session:j1:active 1800
+TTL session:j1:active
+TTL session:j5:active
+SET session:test:active 1 EX 15
+# Mission 4 : FIFO. Trois duels : j3/j1, j5/j2, j4/j6.
+RPUSH file:duels:attente j3 j1 j5 j2 j4 j6
+LRANGE file:duels:attente 0 -1
+LPOP file:duels:attente 2
+LPOP file:duels:attente 2
+LPOP file:duels:attente 2
+LLEN file:duels:attente
+# Missions 5 et 6 : les points et compteurs sont incrémentés après chaque partie.
+MULTI
+HSET partie:1:fiche joueur_a j3 points_a 12 joueur_b j1 points_b 35 vainqueur j1
+INCR plateforme:quiz:parties
+HINCRBY joueur:j3:profil parties 1
+HINCRBY joueur:j1:profil parties 1
+ZINCRBY classement:general:points 12 j3
+ZINCRBY classement:general:points 35 j1
+EXEC
+MULTI
+HSET partie:2:fiche joueur_a j5 points_a 8 joueur_b j2 points_b 40 vainqueur j2
+INCR plateforme:quiz:parties
+HINCRBY joueur:j5:profil parties 1
+HINCRBY joueur:j2:profil parties 1
+ZINCRBY classement:general:points 8 j5
+ZINCRBY classement:general:points 40 j2
+EXEC
+MULTI
+HSET partie:3:fiche joueur_a j4 points_a 28 joueur_b j6 points_b 15 vainqueur j4
+INCR plateforme:quiz:parties
+HINCRBY joueur:j4:profil parties 1
+HINCRBY joueur:j6:profil parties 1
+ZINCRBY classement:general:points 28 j4
+ZINCRBY classement:general:points 15 j6
+EXEC
+MULTI
+HSET partie:4:fiche joueur_a j1 points_a 20 joueur_b j2 points_b 33 vainqueur j2
+INCR plateforme:quiz:parties
+HINCRBY joueur:j1:profil parties 1
+HINCRBY joueur:j2:profil parties 1
+ZINCRBY classement:general:points 20 j1
+ZINCRBY classement:general:points 33 j2
+EXEC
+MULTI
+HSET partie:5:fiche joueur_a j4 points_a 18 joueur_b j3 points_b 31 vainqueur j3
+INCR plateforme:quiz:parties
+HINCRBY joueur:j4:profil parties 1
+HINCRBY joueur:j3:profil parties 1
+ZINCRBY classement:general:points 18 j4
+ZINCRBY classement:general:points 31 j3
+EXEC
+GET plateforme:quiz:parties
+HGETALL joueur:j4:profil
+ZREVRANGE classement:general:points 0 -1 WITHSCORES
+ZREVRANGE classement:general:points 0 2 WITHSCORES
+ZREVRANK classement:general:points j3
+ZSCORE classement:general:points j4
+ZRANGE classement:general:points 40 60 BYSCORE WITHSCORES
+# Mission 7 : badges déduits des cinq parties du sujet.
+SADD badge:premiere-victoire:joueurs j1 j2 j3 j4
+SADD badge:rapide:joueurs j2 j5 j3
+SADD badge:invaincu:joueurs j2
+SINTER badge:premiere-victoire:joueurs badge:rapide:joueurs
+SCARD badge:premiere-victoire:joueurs
+SUNION badge:premiere-victoire:joueurs badge:rapide:joueurs badge:invaincu:joueurs
+SDIFF plateforme:quiz:joueurs badge:premiere-victoire:joueurs badge:rapide:joueurs badge:invaincu:joueurs
